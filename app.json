@@ -7,6 +7,9 @@
     "icon": "./assets/images/icon.png",
     "scheme": "orthoprint",
     "userInterfaceStyle": "automatic",
+    "web": {
+      "bundler": "metro"
+    },
     "ios": {
       "icon": "./assets/expo.icon"
     },
@@ -31,6 +34,14 @@
           "backgroundColor": "#208AEF",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow OrthoPrint to access your camera to capture limb geometry for 3D splint generation.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
         }
       ]
     ],

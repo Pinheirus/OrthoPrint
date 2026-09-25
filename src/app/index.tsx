@@ -1,98 +1,176 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useMemo, useState } from 'react';
+import {
+  View,
+  ScrollView,
+  Pressable,
+  AccessibilityInfo,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+// Design System UI Primitives
+import { ClinicalText } from '@/components/ui';
+import { GlassTabBar } from '@/components/navigation';
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
+// Screen Composite Components
+import {
+  TopAppBar,
+  MetricsRow,
+  StartNewScanCard,
+  ScanListItem,
+  ScanListItemData,
+  EmptyState,
+} from '@/components/dashboard';
+import { useScanStore } from '@/store/useScanStore';
+
+function getClinicalGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return 'Good morning, Dr. Lucas';
+  if (hour >= 12 && hour < 18) return 'Good afternoon, Dr. Lucas';
+  return 'Good evening, Dr. Lucas';
 }
 
-export default function HomeScreen() {
+/**
+ * DashboardScreen
+ * Clean composition of Design System primitives and dashboard composite components using NativeWind.
+ * Hierarchy: SafeArea → TopAppBar → MetricsRow → ScrollView content list.
+ */
+export default function DashboardScreen() {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const scans = useScanStore((state) => state.scans);
+
+  const greeting = useMemo(() => getClinicalGreeting(), []);
+
+  const metrics = useMemo(() => {
+    const totalToday = scans.length;
+    const pendingCount = scans.filter(
+      (s) => s.status === 'processing' || s.status === 'error'
+    ).length;
+    const completedCount = scans.filter((s) => s.status === 'completed').length;
+    return {
+      totalToday,
+      pendingCount,
+      completedCount,
+    };
+  }, [scans]);
+
+  // Floating tab bar is ~80px tall; add generous margin so last card is never clipped
+  const scrollBottomPadding = Math.max(insets.bottom + 112, 136);
+
+  const handleStartNewScan = () => {
+    router.push('/new-scan');
+  };
+
+  const handleScanPress = (scanItem: ScanListItemData) => {
+    const matchedRecord = scans.find((s) => s.id === scanItem.id);
+    router.push({
+      pathname: '/scan-details',
+      params: {
+        id: scanItem.id,
+        patientName: matchedRecord?.patientName || scanItem.patientName,
+        region: matchedRecord?.region || 'Radius/Ulna',
+        side: matchedRecord?.side || 'Right',
+        status: matchedRecord?.status || scanItem.status,
+        date: matchedRecord?.date || scanItem.timestamp,
+        thickness: String(matchedRecord?.thickness ?? 2.4),
+        density: matchedRecord?.density ?? 'Standard',
+      },
+    });
+  };
+
+  const handleSettingsPress = () => {
+    router.push('/profile');
+  };
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+    <View className="flex-1">
+      {/* 1. Top App Bar — safe area inset handled internally by TopAppBar */}
+      <TopAppBar
+        greeting={greeting}
+        doctorName="Dr. Lucas"
+        onAvatarPress={handleSettingsPress}
+        onSettingsPress={handleSettingsPress}
+        onNotificationsPress={() => router.push('/notifications')}
+      />
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+      {/* 2. Metrics Row */}
+      <MetricsRow metrics={metrics} />
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+      {/* 3. Content List — no top SafeArea needed; left/right insets handled by px-6 */}
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{
+          paddingHorizontal: 24,
+          paddingTop: 4,
+          paddingBottom: scrollBottomPadding,
+        }}
+        showsVerticalScrollIndicator={false}
+        accessibilityRole="list"
+        accessibilityLabel="Recent clinical scans and capture trigger"
+      >
+        {/* Start New Scan Card */}
+        <StartNewScanCard onPress={handleStartNewScan} />
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+        {/* Section Divider & Case Count */}
+        <View className="flex-row justify-between items-center mb-5 px-1">
+          <ClinicalText
+            variant="bodyMedium"
+            color="primary"
+            className="text-[15px] font-semibold text-slate-800"
+          >
+            Recent Clinical Scans
+          </ClinicalText>
+          {scans.length > 0 && (
+            <Pressable
+              onPress={() => router.push('/all-scans')}
+              hitSlop={8}
+              className="active:opacity-70"
+            >
+              <ClinicalText variant="caption" color="brand" className="font-semibold">
+                See All ({scans.length})
+              </ClinicalText>
+            </Pressable>
+          )}
+        </View>
+
+        {/* Recent Scans or Empty State */}
+        {scans.length > 0 ? (
+          <View className="gap-5">
+            {scans.map((scan) => {
+              const listItemData: ScanListItemData = {
+                id: scan.id,
+                patientName: scan.patientName,
+                identifier: `SPL-${scan.region.toUpperCase().slice(0, 4)} · ${scan.side} ${scan.region}`,
+                status: scan.status,
+                badgeStatus: scan.badgeStatus,
+                timestamp: scan.date,
+              };
+              return (
+                <ScanListItem
+                  key={scan.id}
+                  scan={listItemData}
+                  onPress={handleScanPress}
+                />
+              );
+            })}
+          </View>
+        ) : (
+          <EmptyState />
+        )}
+      </ScrollView>
+
+      {/* Floating Glass Tab Bar - Docked only on Dashboard */}
+      <GlassTabBar
+        activeTab="dashboard"
+        onTabPress={(tab) => {
+          if (tab === 'new-scan') {
+            router.push('/new-scan');
+          } else if (tab === 'profile') {
+            router.push('/profile');
+          }
+        }}
+      />
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
-  },
-});
