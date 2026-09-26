@@ -4,6 +4,12 @@ import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GlobalToast } from '@/components/ui/GlobalToast';
 
+import { LogBox } from 'react-native';
+LogBox.ignoreLogs([
+  '[Reanimated] Reading from `value`',
+  '[Reanimated] Writing to `value`'
+]);
+
 export { ErrorBoundary } from 'expo-router';
 
 export default function RootLayout() {

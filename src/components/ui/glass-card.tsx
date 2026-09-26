@@ -136,7 +136,7 @@ export function GlassCard({
     <Animated.View
       style={[
         shadowStyle,
-        isClickable ? animatedStyle : undefined,
+        animatedStyle,
         style,
       ]}
     >
