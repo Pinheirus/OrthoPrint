@@ -57,29 +57,29 @@ export function ListItemCard({
       style={style}
       {...restProps}
     >
-      <View className="flex-row items-center">
-        {/* Left: Leading icon slot */}
-        <View className="w-11 h-11 items-center justify-center mr-4">{leadingIcon}</View>
-
-        {/* Center: Title + Subtitle */}
-        <View className="flex-1 justify-center">
-          <ClinicalText variant="h3" color="primary" numberOfLines={1}>
-            {title}
-          </ClinicalText>
-          {subtitle ? (
-            <ClinicalText
-              variant="caption"
-              color="secondary"
-              numberOfLines={1}
-              className="mt-0.5"
-            >
-              {subtitle}
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16 }}>
+        {/* Left: Leading icon slot + Title + Subtitle */}
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingRight: 12 }}>
+          <View className="w-11 h-11 items-center justify-center mr-3.5">{leadingIcon}</View>
+          <View style={{ flex: 1, justifyContent: 'center' }}>
+            <ClinicalText variant="h3" color="primary" numberOfLines={1}>
+              {title}
             </ClinicalText>
-          ) : null}
+            {subtitle ? (
+              <ClinicalText
+                variant="caption"
+                color="secondary"
+                numberOfLines={1}
+                className="mt-0.5"
+              >
+                {subtitle}
+              </ClinicalText>
+            ) : null}
+          </View>
         </View>
 
         {/* Right: Trailing slot */}
-        {trailing ? <View className="flex-row items-center ml-2.5 gap-2">{trailing}</View> : null}
+        {trailing ? <View style={{ flexDirection: 'row', alignItems: 'center' }}>{trailing}</View> : null}
       </View>
     </GlassCard>
   );

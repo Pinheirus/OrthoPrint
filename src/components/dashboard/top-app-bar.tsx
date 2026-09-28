@@ -45,7 +45,7 @@ export function TopAppBar({
   return (
     <View
       className={`flex-row items-center justify-between px-6 pb-5 bg-transparent ${className}`}
-      style={{ paddingTop: insets.top + 8 }}
+      style={{ paddingTop: insets.top + 20, marginBottom: 32 }}
       accessibilityRole="header"
     >
       {/* Left: Avatar immediately followed by greeting */}

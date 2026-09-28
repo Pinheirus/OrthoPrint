@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import {
   Alert,
+  Platform,
   Pressable,
   ScrollView,
+  StyleSheet,
   Switch,
   View,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { ArrowLeft } from 'phosphor-react-native/src/icons/ArrowLeft';
 import { Stethoscope } from 'phosphor-react-native/src/icons/Stethoscope';
@@ -18,10 +21,9 @@ import { Vibrate } from 'phosphor-react-native/src/icons/Vibrate';
 import { SignOut } from 'phosphor-react-native/src/icons/SignOut';
 import { CaretRight } from 'phosphor-react-native/src/icons/CaretRight';
 import { User } from 'phosphor-react-native/src/icons/User';
-import { GlassSurface } from '@/components/ui/glass-surface';
+import { GearSix } from 'phosphor-react-native/src/icons/GearSix';
 import { ClinicalText } from '@/components/ui/clinical-text';
 import { GlassTabBar } from '@/components/navigation/glass-tab-bar';
-import { Colors } from '@/constants/tokens';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -53,24 +55,28 @@ export default function ProfileScreen() {
     ]);
   };
 
+  const isWeb = Platform.OS === 'web';
+  const GLASS_CARD_STYLE = {
+    backgroundColor: 'rgba(255, 255, 255, 0.45)',
+    borderColor: 'rgba(255, 255, 255, 0.9)',
+    borderWidth: 1.5,
+    borderRadius: 20,
+    overflow: 'hidden' as const,
+  };
+
   return (
-    <View className="flex-1 bg-sky-50">
-      {/* Background Linear Gradient */}
+    <View className="flex-1">
+      {/* 1. Dynamic Background: white at top fading to soft clinical blue at bottom */}
       <LinearGradient
-        colors={[
-          Colors.background.gradientTop,
-          Colors.background.gradientMiddle ?? '#E0F2FE',
-          Colors.background.gradientBottom,
-        ]}
-        locations={[0, 0.45, 1]}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        className="absolute inset-0"
+        colors={['#FFFFFF', '#F0F8FF', '#D6EAF8']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={StyleSheet.absoluteFill}
       />
 
-      {/* Top Clinical Header */}
+      {/* Top Clinical Header with safe-area spacing and clean blue gear icon */}
       <View
-        style={{ paddingTop: insets.top + 8 }}
+        style={{ paddingTop: insets.top + 16 }}
         className="px-5 pb-3 flex-row items-center gap-3 bg-transparent z-10"
       >
         <Pressable
@@ -89,26 +95,80 @@ export default function ProfileScreen() {
             Doctor Profile
           </ClinicalText>
         </View>
+
+        {/* Clean Blue Gear Icon (No wrapper background/border) */}
+        <Pressable
+          hitSlop={8}
+          className="w-10 h-10 items-center justify-center active:opacity-70"
+        >
+          <GearSix size={22} color="#0284C7" weight="bold" />
+        </Pressable>
       </View>
 
+      {/* Main ScrollView with paddingBottom: 180 to guarantee floating tab bar clearance */}
       <ScrollView
         className="flex-1 px-5"
         contentContainerStyle={{
           paddingTop: 12,
-          paddingBottom: insets.bottom + 120, // Leave room for floating bottom tab bar
+          paddingBottom: 180,
         }}
         showsVerticalScrollIndicator={false}
       >
         {/* Header Card: Avatar & Doctor Profile Details */}
-        <GlassSurface density="dense" elevation="md" radius="4xl" className="p-6 items-center mb-5">
-          {/* Large Circular Avatar Placeholder */}
-          <View className="relative mb-3.5">
-            <View className="w-24 h-24 rounded-full bg-primary-100 border-2 border-white items-center justify-center shadow-md shadow-primary-500/20">
+        <BlurView
+          intensity={50}
+          tint="light"
+          style={[
+            GLASS_CARD_STYLE,
+            {
+              alignItems: 'center',
+              padding: 24,
+              marginBottom: 24,
+            },
+            isWeb && ({
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+            } as any),
+          ]}
+        >
+          {/* Centered Avatar with Anchored Green Status Indicator */}
+          <View style={{ position: 'relative', width: 96, height: 96, marginBottom: 14 }}>
+            <View
+              style={{
+                width: 96,
+                height: 96,
+                borderRadius: 48,
+                backgroundColor: '#E0F2FE',
+                borderWidth: 2,
+                borderColor: '#FFFFFF',
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: '#0EA5E9',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.2,
+                shadowRadius: 8,
+                elevation: 4,
+              }}
+            >
               <User size={46} color="#0EA5E9" weight="duotone" />
             </View>
-            {/* Active Clinical Status Indicator */}
-            <View className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-emerald-500 border-2 border-white items-center justify-center">
-              <View className="w-2 h-2 rounded-full bg-white" />
+            {/* Active Status Dot anchored directly to avatar circle */}
+            <View
+              style={{
+                position: 'absolute',
+                bottom: 4,
+                right: 4,
+                width: 20,
+                height: 20,
+                borderRadius: 10,
+                backgroundColor: '#10B981',
+                borderWidth: 2,
+                borderColor: '#FFFFFF',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#FFFFFF' }} />
             </View>
           </View>
 
@@ -119,24 +179,44 @@ export default function ProfileScreen() {
             Universidad Sudamericana
           </ClinicalText>
 
-          <View className="mt-3 bg-sky-50 border border-sky-200/80 px-3 py-1 rounded-full">
+          {/* Centered Neat Pill Badge */}
+          <View
+            style={{
+              alignSelf: 'center',
+              paddingHorizontal: 16,
+              paddingVertical: 6,
+              borderRadius: 20,
+              marginTop: 12,
+              backgroundColor: 'rgba(0, 122, 255, 0.1)',
+            }}
+          >
             <ClinicalText variant="tiny" color="brand" className="font-semibold uppercase tracking-wider">
               Lead Orthopedic Surgeon
             </ClinicalText>
           </View>
-        </GlassSurface>
+        </BlurView>
 
         {/* Section 1: Professional Details */}
-        <View className="mb-5">
+        <View className="mb-6">
           <ClinicalText variant="h3" color="primary" className="mb-2.5 ml-1">
             Professional Details
           </ClinicalText>
 
-          <GlassSurface density="standard" radius="2xl" className="overflow-hidden">
+          <BlurView
+            intensity={50}
+            tint="light"
+            style={[
+              GLASS_CARD_STYLE,
+              isWeb && ({
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+              } as any),
+            ]}
+          >
             {/* Specialty Row */}
-            <View className="p-4 flex-row items-center justify-between border-b border-slate-100">
+            <View className="p-4 flex-row items-center justify-between border-b border-white/60">
               <View className="flex-row items-center gap-3">
-                <View className="w-9 h-9 rounded-xl bg-sky-50 items-center justify-center">
+                <View className="w-9 h-9 rounded-xl bg-sky-50/80 border border-sky-100 items-center justify-center">
                   <Stethoscope size={20} color="#0EA5E9" weight="duotone" />
                 </View>
                 <View>
@@ -153,7 +233,7 @@ export default function ProfileScreen() {
             {/* License / CRM Row */}
             <View className="p-4 flex-row items-center justify-between">
               <View className="flex-row items-center gap-3">
-                <View className="w-9 h-9 rounded-xl bg-sky-50 items-center justify-center">
+                <View className="w-9 h-9 rounded-xl bg-sky-50/80 border border-sky-100 items-center justify-center">
                   <Certificate size={20} color="#0EA5E9" weight="duotone" />
                 </View>
                 <View>
@@ -166,23 +246,33 @@ export default function ProfileScreen() {
                 </View>
               </View>
             </View>
-          </GlassSurface>
+          </BlurView>
         </View>
 
         {/* Section 2: Hardware Settings */}
-        <View className="mb-5">
+        <View className="mb-6">
           <ClinicalText variant="h3" color="primary" className="mb-2.5 ml-1">
             Hardware & Scanner
           </ClinicalText>
 
-          <GlassSurface density="standard" radius="2xl" className="overflow-hidden">
+          <BlurView
+            intensity={50}
+            tint="light"
+            style={[
+              GLASS_CARD_STYLE,
+              isWeb && ({
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+              } as any),
+            ]}
+          >
             {/* LiDAR Calibration Row */}
             <Pressable
               onPress={handleLidarCalibration}
-              className="p-4 flex-row items-center justify-between border-b border-slate-100 active:bg-slate-50"
+              className="p-4 flex-row items-center justify-between border-b border-white/60 active:bg-white/30"
             >
               <View className="flex-row items-center gap-3 flex-1">
-                <View className="w-9 h-9 rounded-xl bg-sky-50 items-center justify-center">
+                <View className="w-9 h-9 rounded-xl bg-sky-50/80 border border-sky-100 items-center justify-center">
                   <Crosshair size={20} color="#0EA5E9" weight="duotone" />
                 </View>
                 <View className="flex-1">
@@ -200,7 +290,7 @@ export default function ProfileScreen() {
             {/* Haptic Feedback Toggle Row */}
             <View className="p-4 flex-row items-center justify-between">
               <View className="flex-row items-center gap-3 flex-1 pr-3">
-                <View className="w-9 h-9 rounded-xl bg-sky-50 items-center justify-center">
+                <View className="w-9 h-9 rounded-xl bg-sky-50/80 border border-sky-100 items-center justify-center">
                   <Vibrate size={20} color="#0EA5E9" weight="duotone" />
                 </View>
                 <View className="flex-1">
@@ -222,7 +312,7 @@ export default function ProfileScreen() {
                 thumbColor="#FFFFFF"
               />
             </View>
-          </GlassSurface>
+          </BlurView>
         </View>
 
         {/* Section 3: Account / Session */}
@@ -231,13 +321,23 @@ export default function ProfileScreen() {
             Account
           </ClinicalText>
 
-          <GlassSurface density="standard" radius="2xl" className="overflow-hidden">
+          <BlurView
+            intensity={50}
+            tint="light"
+            style={[
+              GLASS_CARD_STYLE,
+              isWeb && ({
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+              } as any),
+            ]}
+          >
             <Pressable
               onPress={handleLogout}
-              className="p-4 flex-row items-center justify-between active:bg-rose-50/50"
+              className="p-4 flex-row items-center justify-between active:bg-rose-50/40"
             >
               <View className="flex-row items-center gap-3">
-                <View className="w-9 h-9 rounded-xl bg-rose-50 items-center justify-center">
+                <View className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-200/50 items-center justify-center">
                   <SignOut size={20} color="#F43F5E" weight="bold" />
                 </View>
                 <ClinicalText variant="bodyMedium" color="error" className="font-semibold">
@@ -246,7 +346,7 @@ export default function ProfileScreen() {
               </View>
               <CaretRight size={18} color="#FDA4AF" />
             </Pressable>
-          </GlassSurface>
+          </BlurView>
         </View>
       </ScrollView>
 

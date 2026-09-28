@@ -5,20 +5,20 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  StyleSheet,
   TextInput,
   View,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { ArrowLeft } from 'phosphor-react-native/src/icons/ArrowLeft';
 import { Camera } from 'phosphor-react-native/src/icons/Camera';
 import { User } from 'phosphor-react-native/src/icons/User';
 import { IdentificationCard } from 'phosphor-react-native/src/icons/IdentificationCard';
-import { GlassSurface } from '@/components/ui/glass-surface';
 import { ClinicalText } from '@/components/ui/clinical-text';
-import { Colors } from '@/constants/tokens';
 import { useScanStore, ScanStatus, StatusBadgeType } from '@/store/useScanStore';
 
 const ANATOMICAL_REGIONS = ['Forearm', 'Wrist', 'Hand', 'Thumb'] as const;
@@ -97,24 +97,31 @@ export default function NewScanScreen() {
     });
   };
 
+  const isWeb = Platform.OS === 'web';
+  const GLASS_CARD_STYLE = {
+    backgroundColor: 'rgba(255, 255, 255, 0.45)',
+    borderColor: 'rgba(255, 255, 255, 0.9)',
+    borderWidth: 1.5,
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    marginBottom: 24,
+    overflow: 'hidden' as const,
+  };
+
   return (
-    <View className="flex-1 bg-sky-50">
-      {/* Background Gradient */}
+    <View className="flex-1">
+      {/* Background Gradient: white at top fading to soft clinical blue at bottom */}
       <LinearGradient
-        colors={[
-          Colors.background.gradientTop,
-          Colors.background.gradientMiddle ?? '#E0F2FE',
-          Colors.background.gradientBottom,
-        ]}
-        locations={[0, 0.45, 1]}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        className="absolute inset-0"
+        colors={['#FFFFFF', '#F0F8FF', '#D6EAF8']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={StyleSheet.absoluteFill}
       />
 
       {/* Top Clinical Header */}
       <View
-        style={{ paddingTop: insets.top + 8 }}
+        style={{ paddingTop: insets.top + 16 }}
         className="px-5 pb-3 flex-row items-center gap-3 bg-transparent z-10"
       >
         <Pressable
@@ -143,13 +150,24 @@ export default function NewScanScreen() {
           className="flex-1 px-5"
           contentContainerStyle={{
             paddingTop: 12,
-            paddingBottom: insets.bottom + 104,
+            paddingBottom: insets.bottom + 120,
           }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
           {/* Section 1: Patient Information */}
-          <GlassSurface density="standard" radius="2xl" className="p-4 mb-4">
+          <BlurView
+            intensity={50}
+            tint="light"
+            style={[
+              GLASS_CARD_STYLE,
+              { marginTop: 16 },
+              isWeb && ({
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+              } as any),
+            ]}
+          >
             <ClinicalText variant="h3" color="primary" className="mb-1">
               Patient Details
             </ClinicalText>
@@ -192,10 +210,20 @@ export default function NewScanScreen() {
                 />
               </View>
             </View>
-          </GlassSurface>
+          </BlurView>
 
           {/* Section 2: Anatomical Region */}
-          <GlassSurface density="standard" radius="2xl" className="p-4 mb-4">
+          <BlurView
+            intensity={50}
+            tint="light"
+            style={[
+              GLASS_CARD_STYLE,
+              isWeb && ({
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+              } as any),
+            ]}
+          >
             <ClinicalText variant="h3" color="primary" className="mb-1">
               Anatomical Region
             </ClinicalText>
@@ -227,10 +255,20 @@ export default function NewScanScreen() {
                 );
               })}
             </View>
-          </GlassSurface>
+          </BlurView>
 
           {/* Section 3: Laterality */}
-          <GlassSurface density="standard" radius="2xl" className="p-4 mb-4">
+          <BlurView
+            intensity={50}
+            tint="light"
+            style={[
+              GLASS_CARD_STYLE,
+              isWeb && ({
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+              } as any),
+            ]}
+          >
             <ClinicalText variant="h3" color="primary" className="mb-1">
               Limb Laterality
             </ClinicalText>
@@ -262,18 +300,31 @@ export default function NewScanScreen() {
                 );
               })}
             </View>
-          </GlassSurface>
+          </BlurView>
         </ScrollView>
       </KeyboardAvoidingView>
 
       {/* Primary Sticky Bottom Action Button */}
       <View
-        style={{ paddingBottom: insets.bottom + 16 }}
-        className="absolute bottom-0 left-0 right-0 px-5 pt-3 bg-white/90 border-t border-slate-200/70"
+        style={{
+          paddingBottom: insets.bottom + 16,
+          backgroundColor: 'transparent',
+        }}
+        className="absolute bottom-0 left-0 right-0 px-5"
+        pointerEvents="box-none"
       >
         <Pressable
           onPress={handleInitializeScanner}
-          className="w-full h-14 bg-sky-500 active:bg-sky-600 rounded-2xl flex-row items-center justify-center gap-2.5 shadow-md shadow-sky-500/30"
+          style={{
+            marginBottom: 16,
+            borderRadius: 100,
+            shadowColor: '#0284C7',
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.35,
+            shadowRadius: 12,
+            elevation: 8,
+          }}
+          className="w-full h-14 bg-sky-500 active:bg-sky-600 flex-row items-center justify-center gap-2.5"
         >
           <Camera size={22} color="#FFFFFF" weight="bold" />
           <ClinicalText variant="bodyMedium" color="white" className="font-bold tracking-wide">

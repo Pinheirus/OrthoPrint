@@ -11,6 +11,8 @@ import {
   StyleSheet, View, Text, TouchableOpacity,
   SafeAreaView, ScrollView, Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 import {
   ViroARScene, ViroARSceneNavigator, ViroAmbientLight,
   ViroSphere, ViroPolyline, ViroMaterials,
@@ -37,7 +39,7 @@ const PHASE_CONFIG: Record<Phase, {
 }> = {
   idle: {
     btnLabel:   'Marcar Inicio (Ponto A)',
-    color:      '#2563EB',
+    color:      '#007AFF',
     statusText: 'Aponte para o Ponto Inicial',
     pillLabel:  'PONTO A',
     badgeLabel: null,
@@ -51,7 +53,7 @@ const PHASE_CONFIG: Record<Phase, {
   },
   hasAB: {
     btnLabel:   'Salvar Medida',
-    color:      '#8B5CF6',
+    color:      '#007AFF',
     statusText: 'Pronto para salvar',
     pillLabel:  'SALVAR',
     badgeLabel: 'A \u2194 B',
@@ -170,9 +172,10 @@ function ScannerUI({
   isTracking, phase, currentStepLabel, instruction, clinicalData, liveDistance, isDone,
   onAction, onClear, onNextStep,
 }: ScannerUIProps) {
+  const insets = useSafeAreaInsets();
   const cfg = PHASE_CONFIG[phase];
 
-  const statusColor  = !isTracking ? '#F59E0B' : cfg.color;
+  const statusColor  = !isTracking ? '#D97706' : (cfg.color === '#00E5A0' ? '#059669' : cfg.color);
   const reticleColor = isTracking && phase !== 'hasAB' ? '#00E5A0' : 'rgba(255,255,255,0.4)';
   const btnDisabled  = !isTracking && phase !== 'hasAB';
 
@@ -182,76 +185,70 @@ function ScannerUI({
   return (
     <View style={[StyleSheet.absoluteFill, ui.overlay]} pointerEvents="box-none">
 
-      {/* ── Top: status bar + step label + log ── */}
-      <SafeAreaView pointerEvents="none">
-
-        {/* Row 1 — tracking / done status */}
-        <View style={ui.statusBar}>
-          <View style={ui.statusRow}>
-            <View style={[ui.dot, { backgroundColor: isDone ? '#00E5A0' : statusColor }]} />
-            <Text style={[ui.statusText, { color: isDone ? '#00E5A0' : statusColor }]}>
+      {/* ── 1. Top Instruction Panel: Glassmorphism BlurView ── */}
+      <BlurView
+        intensity={60}
+        tint="light"
+        style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.4)',
+          borderColor: 'rgba(255, 255, 255, 0.9)',
+          borderWidth: 1.5,
+          borderRadius: 24,
+          padding: 20,
+          marginHorizontal: 16,
+          marginTop: insets.top + 16,
+          overflow: 'hidden',
+          shadowColor: '#0F172A',
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.08,
+          shadowRadius: 16,
+          elevation: 4,
+        }}
+      >
+        {/* Status / Tracking Line */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isDone ? '#10B981' : statusColor }} />
+            <Text style={{ fontSize: 13, fontWeight: '700', color: '#0F172A' }}>
               {isDone ? 'Medição clínica concluída' : (!isTracking ? 'Mapeando ambiente...' : cfg.statusText)}
             </Text>
           </View>
           {isDone ? (
-            <View style={[ui.pill, { borderColor: '#00E5A0' }]}>
-              <Text style={[ui.pillText, { color: '#00E5A0' }]}>
+            <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, backgroundColor: 'rgba(16, 185, 129, 0.15)', borderWidth: 1, borderColor: '#10B981' }}>
+              <Text style={{ fontSize: 11, fontWeight: '700', color: '#059669' }}>
                 {CLINICAL_STEPS.length} / {CLINICAL_STEPS.length} ✓
               </Text>
             </View>
           ) : (
             cfg.badgeLabel && (
-              <View style={[ui.pill, { borderColor: cfg.color }]}>
-                <Text style={[ui.pillText, { color: cfg.color }]}>{cfg.badgeLabel}</Text>
+              <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, backgroundColor: 'rgba(2, 132, 199, 0.12)', borderWidth: 1, borderColor: 'rgba(2, 132, 199, 0.4)' }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: '#0284C7' }}>{cfg.badgeLabel}</Text>
               </View>
             )
           )}
         </View>
 
-        {/* Row 2 — current clinical step label + instruction (hidden when done) */}
+        {/* Step details & instruction cue — Clean Clinical Typography, No Emojis */}
         {!isDone && currentStepLabel && (
-          <View style={ui.stepLabelCard}>
-            <Text style={ui.stepLabelMeta}>
+          <View style={{ gap: 4 }}>
+            <Text style={{ fontSize: 11, fontWeight: '800', letterSpacing: 1.2, color: '#0284C7', textTransform: 'uppercase' }}>
               ETAPA {savedCount + 1} DE {CLINICAL_STEPS.length}
             </Text>
-            <Text style={ui.stepLabelText}>📐  {currentStepLabel}</Text>
-
-            {/* Contextual instruction — anatomical positioning cue */}
+            <Text style={{ fontSize: 18, fontWeight: '700', color: '#0F172A', letterSpacing: -0.3 }}>
+              {currentStepLabel}
+            </Text>
             {instruction && (
-              <View style={ui.instructionCard}>
-                <Text style={ui.instructionText}>💡  {instruction}</Text>
+              <View style={{ marginTop: 8, backgroundColor: 'rgba(255, 255, 255, 0.65)', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.9)' }}>
+                <Text style={{ fontSize: 13, fontWeight: '400', color: '#334155', lineHeight: 18 }}>
+                  {instruction}
+                </Text>
               </View>
             )}
           </View>
         )}
+      </BlurView>
 
-        {/* Row 3 — saved measurements log */}
-        {savedCount > 0 && (
-          <View style={ui.logCard}>
-            <Text style={ui.logTitle}>Medidas salvas</Text>
-            {CLINICAL_STEPS.map((step, i) => {
-              const val = clinicalData[step.key];
-              const saved = val !== undefined;
-              return (
-                <View key={step.key} style={ui.logRow}>
-                  <View style={[
-                    ui.logBubble,
-                    { backgroundColor: saved ? PALETTE[i % PALETTE.length] : 'rgba(255,255,255,0.12)' },
-                  ]}>
-                    <Text style={ui.logBubbleText}>{i + 1}</Text>
-                  </View>
-                  <Text style={[ui.logLabel, !saved && { opacity: 0.35 }]}>{step.label}</Text>
-                  <Text style={ui.logValue}>
-                    {saved ? `${val!.toFixed(1)} cm` : '—'}
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
-        )}
-      </SafeAreaView>
-
-      {/* ── Centre: reticle — hidden when done ── */}
+      {/* ── Center: Reticle & Glass Target Badge ("PONTO A") ── */}
       {!isDone && (
         <>
           <View style={ui.reticleWrapper} pointerEvents="none">
@@ -263,51 +260,154 @@ function ScannerUI({
             <View style={[ui.crossV, { backgroundColor: reticleColor }]} />
           </View>
 
-          {/* Phase pill below reticle */}
+          {/* Center Target Badge ("PONTO A" / "PONTO B" only — redundant "SALVAR" badge removed) */}
           <View style={ui.phasePillWrapper} pointerEvents="none">
-            <View style={[ui.pill, ui.pillLg, { borderColor: cfg.color }]}>
-              <Text style={[ui.pillText, ui.pillLgText, { color: cfg.color }]}>{cfg.pillLabel}</Text>
-            </View>
+            {phase !== 'hasAB' && (
+              <BlurView
+                intensity={50}
+                tint="light"
+                style={{
+                  paddingHorizontal: 16,
+                  paddingVertical: 6,
+                  borderRadius: 20,
+                  backgroundColor: 'rgba(255, 255, 255, 0.45)',
+                  borderColor: 'rgba(255, 255, 255, 0.8)',
+                  borderWidth: 1,
+                  overflow: 'hidden',
+                  shadowColor: '#0F172A',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 4,
+                  elevation: 2,
+                }}
+              >
+                <Text style={{ color: '#0F172A', fontSize: 12, fontWeight: '800', letterSpacing: 1.2 }}>
+                  {cfg.pillLabel}
+                </Text>
+              </BlurView>
+            )}
 
             {/* Live distance chip — visible only during rubber-band phase */}
             {phase === 'hasA' && liveDistance !== null && (
-              <View style={ui.liveDistChip}>
-                <Text style={ui.liveDistValue}>{liveDistance.toFixed(1)}</Text>
-                <Text style={ui.liveDistUnit}> cm</Text>
-              </View>
+              <BlurView
+                intensity={50}
+                tint="light"
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'baseline',
+                  paddingHorizontal: 18,
+                  paddingVertical: 7,
+                  borderRadius: 22,
+                  backgroundColor: 'rgba(255, 255, 255, 0.6)',
+                  borderWidth: 1.5,
+                  borderColor: '#0284C7',
+                  overflow: 'hidden',
+                }}
+              >
+                <Text style={{ color: '#0284C7', fontSize: 28, fontWeight: '800', letterSpacing: -0.5 }}>
+                  {liveDistance.toFixed(1)}
+                </Text>
+                <Text style={{ color: '#0284C7', fontSize: 14, fontWeight: '700' }}> cm</Text>
+              </BlurView>
             )}
           </View>
         </>
       )}
 
-      {/* ── Bottom bar ── */}
-      <SafeAreaView style={ui.bottomSafe} pointerEvents="box-none">
+      {/* ── 2. Bottom Floating Action Buttons: Ghost Reset + Clinical Blue Pill ── */}
+      <View
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          paddingHorizontal: 24,
+          paddingBottom: insets.bottom + 16,
+          alignItems: 'center',
+          gap: 12,
+        }}
+        pointerEvents="box-none"
+      >
         {isDone ? (
-          /* ── Done state: single prominent CTA ── */
-          <View style={ui.bottomBar}>
-            <TouchableOpacity style={ui.nextBtn} onPress={onNextStep} activeOpacity={0.82}>
-              <Text style={ui.actionBtnText}>Medidas Concluídas — Avançar ›</Text>
-            </TouchableOpacity>
-          </View>
+          /* Done state: next button */
+          <TouchableOpacity
+            style={{
+              width: '100%',
+              height: 56,
+              borderRadius: 100,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#00E5A0',
+              shadowColor: '#007AFF',
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.3,
+              shadowRadius: 16,
+              elevation: 10,
+            }}
+            onPress={onNextStep}
+            activeOpacity={0.82}
+          >
+            <Text style={{ color: '#0F172A', fontSize: 16, fontWeight: '800', letterSpacing: 0.3 }}>
+              Medidas Concluídas — Avançar ›
+            </Text>
+          </TouchableOpacity>
         ) : (
-          /* ── Capture state: clear + action ── */
-          <View style={ui.bottomBar}>
+          /* Capture state: clean Ghost reset + floating pill primary action */
+          <>
             {savedCount > 0 && (
-              <TouchableOpacity style={ui.clearBtn} onPress={onClear} activeOpacity={0.7}>
-                <Text style={ui.clearBtnText}>Reiniciar protocolo</Text>
+              <TouchableOpacity
+                style={{
+                  paddingVertical: 8,
+                  paddingHorizontal: 16,
+                  backgroundColor: 'transparent',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                onPress={onClear}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={{
+                    color: '#FFFFFF',
+                    fontSize: 14,
+                    fontWeight: '600',
+                    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+                    textShadowOffset: { width: 0, height: 1 },
+                    textShadowRadius: 4,
+                  }}
+                >
+                  Reiniciar protocolo
+                </Text>
               </TouchableOpacity>
             )}
             <TouchableOpacity
-              style={[ui.actionBtn, { backgroundColor: cfg.color }, btnDisabled && ui.disabled]}
+              style={[
+                {
+                  width: '100%',
+                  height: 56,
+                  borderRadius: 100,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: '#007AFF',
+                  shadowColor: '#007AFF',
+                  shadowOffset: { width: 0, height: 8 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 16,
+                  elevation: 10,
+                },
+                btnDisabled && { opacity: 0.35 },
+              ]}
               onPress={onAction}
               disabled={btnDisabled}
               activeOpacity={0.78}
             >
-              <Text style={ui.actionBtnText}>{cfg.btnLabel}</Text>
+              <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '800', letterSpacing: 0.4 }}>
+                {cfg.btnLabel}
+              </Text>
             </TouchableOpacity>
-          </View>
+          </>
         )}
-      </SafeAreaView>
+      </View>
 
     </View>
   );

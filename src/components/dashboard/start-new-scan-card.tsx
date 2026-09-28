@@ -28,13 +28,20 @@ export function StartNewScanCard({ onPress, className = '', style }: StartNewSca
       className={`mb-8 ${className}`}
       style={style}
       leadingIcon={
-        <View className="w-11 h-11 rounded-full bg-primary-50 border border-primary-100 items-center justify-center">
-          <IconWrapper
-            icon={Plus}
-            size="action"
-            color="brand"
+        <View
+          className="w-11 h-11 rounded-full bg-sky-500 items-center justify-center"
+          style={{
+            shadowColor: '#0EA5E9',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.38,
+            shadowRadius: 8,
+            elevation: 5,
+          }}
+        >
+          <Plus
+            size={22}
+            color="#FFFFFF"
             weight="bold"
-            accessibilityLabel="New scan icon"
           />
         </View>
       }

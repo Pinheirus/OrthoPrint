@@ -1,7 +1,8 @@
 import React, { useRef } from 'react';
-import { Alert, Pressable, ScrollView, View } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { ArrowLeft } from 'phosphor-react-native/src/icons/ArrowLeft';
 import { Printer } from 'phosphor-react-native/src/icons/Printer';
@@ -103,11 +104,22 @@ export default function ViewerScreen() {
   };
 
   return (
-    <View className="flex-1 bg-transparent">
-      {/* 1. TOP CLINICAL CONTEXT BAR */}
+    <View className="flex-1">
+      {/* Explicitly disable navigation header to prevent any injected elements */}
+      <Stack.Screen options={{ headerShown: false }} />
+
+      {/* 2. Background Gradient */}
+      <LinearGradient
+        colors={['#E3F2FD', '#F4F9FF', '#FFFFFF']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+
+      {/* 1. Top Clinical Header with safe-area spacing */}
       <View
-        style={{ paddingTop: insets.top + 8 }}
-        className="px-5 pb-3 flex-row items-center gap-3 bg-transparent"
+        style={{ paddingTop: insets.top + 16 }}
+        className="px-5 pb-3 flex-row items-center gap-3 bg-transparent z-10"
       >
         <Pressable
           onPress={handleBack}
@@ -128,19 +140,19 @@ export default function ViewerScreen() {
         </View>
       </View>
 
-      {/* 2. SCROLLABLE CONTENT */}
+      {/* Scrollable Content */}
       <ScrollView
         className="flex-1 px-5"
         contentContainerStyle={{
-          paddingBottom: isReadOnly ? insets.bottom + 32 : insets.bottom + 104,
+          paddingBottom: isReadOnly ? insets.bottom + 32 : insets.bottom + 110,
           paddingTop: 8,
         }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Isolated CAD Viewport */}
+        {/* CAD Viewport Simulation */}
         <CADViewport />
 
-        {/* Isolated State Parameter Controls */}
+        {/* 3. Glassmorphism Splint Parameter Controls */}
         <ParameterControls
           initialThickness={initialThickness}
           initialDensity={initialDensity}
@@ -150,18 +162,40 @@ export default function ViewerScreen() {
         />
       </ScrollView>
 
-      {/* 3. PRIMARY ACTION (Docked Solid Bottom CTA - Hidden for Read-Only / Past Scans) */}
+      {/* 4. Floating CTA Button */}
       {!isReadOnly && (
         <View
-          style={{ paddingBottom: insets.bottom + 16 }}
-          className="absolute bottom-0 left-0 right-0 px-5 pt-3 bg-white/90 border-t border-slate-200/70"
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            paddingBottom: insets.bottom + 16,
+            backgroundColor: 'transparent',
+          }}
+          pointerEvents="box-none"
         >
           <Pressable
             onPress={handlePrint}
-            className="w-full h-14 bg-sky-500 active:bg-sky-600 rounded-2xl flex-row items-center justify-center gap-2.5 shadow-md shadow-sky-500/30"
+            style={{
+              marginHorizontal: 20,
+              height: 56,
+              borderRadius: 100,
+              backgroundColor: '#007AFF',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 10,
+              shadowColor: '#007AFF',
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.3,
+              shadowRadius: 16,
+              elevation: 10,
+            }}
+            className="active:opacity-90"
           >
             <Printer size={22} color="#FFFFFF" weight="bold" />
-            <ClinicalText variant="bodyMedium" color="white" className="font-bold tracking-wide">
+            <ClinicalText variant="bodyMedium" color="white" className="font-bold tracking-wide text-[16px]">
               Approve & Send to Printer
             </ClinicalText>
           </Pressable>

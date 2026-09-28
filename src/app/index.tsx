@@ -4,9 +4,11 @@ import {
   ScrollView,
   Pressable,
   AccessibilityInfo,
+  StyleSheet,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 
 // Design System UI Primitives
 import { ClinicalText } from '@/components/ui';
@@ -85,6 +87,14 @@ export default function DashboardScreen() {
 
   return (
     <View className="flex-1">
+      {/* Dynamic Background: white at top fading to soft clinical blue at bottom */}
+      <LinearGradient
+        colors={['#FFFFFF', '#F0F8FF', '#D6EAF8']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+
       {/* 1. Top App Bar — safe area inset handled internally by TopAppBar */}
       <TopAppBar
         greeting={greeting}

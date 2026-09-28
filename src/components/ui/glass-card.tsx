@@ -3,6 +3,7 @@ import {
   Platform,
   Pressable,
   PressableProps,
+  StyleSheet,
   View,
 } from 'react-native';
 import Animated, {
@@ -12,6 +13,14 @@ import Animated, {
 } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { Motion } from '@/constants/tokens';
+
+export const GLASS_STYLE = {
+  backgroundColor: 'rgba(255, 255, 255, 0.45)',
+  borderColor: 'rgba(255, 255, 255, 0.9)',
+  borderWidth: 1.5,
+  borderRadius: 20,
+  overflow: 'hidden' as const,
+};
 
 export interface GlassCardProps extends Omit<PressableProps, 'style'> {
   density?: 'subtle' | 'standard' | 'dense';
@@ -86,7 +95,7 @@ const ELEVATION_INLINE: Record<GlassCardProps['elevation'] & string, object> = {
 export function GlassCard({
   children,
   density = 'standard',
-  intensity = 60,
+  intensity = 45,
   radius = '4xl',
   elevation = 'soft',
   interactive = false,
@@ -126,10 +135,7 @@ export function GlassCard({
 
   const isWeb = Platform.OS === 'web';
   const isClickable = interactive || !!onPress;
-
-  const densityBg   = DENSITY_BG_CLASSES[density]   ?? DENSITY_BG_CLASSES.standard;
-  const radiusClass  = RADIUS_CLASSES[radius]         ?? RADIUS_CLASSES['4xl'];
-  const shadowStyle  = ELEVATION_INLINE[elevation]    ?? ELEVATION_INLINE.soft;
+  const shadowStyle  = ELEVATION_INLINE[elevation] ?? ELEVATION_INLINE.soft;
   const touchClass   = minTouchTarget ? 'min-h-touch min-w-touch' : '';
 
   return (
@@ -145,36 +151,44 @@ export function GlassCard({
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         disabled={!isClickable}
-        className={`relative ${radiusClass} ${touchClass} ${className}`}
-        style={
-          isWeb
-            ? ({
-                backdropFilter: `blur(${Math.round(intensity * 0.4)}px)`,
-                WebkitBackdropFilter: `blur(${Math.round(intensity * 0.4)}px)`,
-                cursor: isClickable ? 'pointer' : 'default',
-              } as any)
-            : undefined
-        }
+        className={`relative ${touchClass} ${className}`}
+        style={[
+          GLASS_STYLE,
+          isWeb && ({
+            backdropFilter: `blur(${Math.round(intensity * 0.4)}px)`,
+            WebkitBackdropFilter: `blur(${Math.round(intensity * 0.4)}px)`,
+            cursor: isClickable ? 'pointer' : 'default',
+          } as any),
+        ]}
         {...props}
       >
         {!isWeb && (
           <BlurView
             intensity={intensity}
             tint="light"
-            className={`absolute inset-0 ${radiusClass} overflow-hidden`}
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                borderRadius: 20,
+                overflow: 'hidden',
+              },
+            ]}
           />
         )}
 
-        {/* Semi-transparent white wash & crisp defining hairline border */}
+        {/* Semi-transparent overlay with crisp glass edge */}
         <View
           pointerEvents="none"
-          className={`absolute inset-0 ${radiusClass} border border-white/60 ${densityBg} overflow-hidden`}
+          style={[
+            StyleSheet.absoluteFill,
+            GLASS_STYLE,
+          ]}
         />
 
         {/* Top specular highlight — simulates light catching the card's top glass edge */}
         <View
           pointerEvents="none"
-          className={`absolute top-0 left-4 right-4 h-px bg-white/70 ${radiusClass}`}
+          className="absolute top-0 left-4 right-4 h-px bg-white/80 rounded-full"
         />
 
         <View className="z-10">{children}</View>

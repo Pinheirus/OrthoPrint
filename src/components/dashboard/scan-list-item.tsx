@@ -1,12 +1,12 @@
 import React from 'react';
-import { View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { CaretRight } from 'phosphor-react-native/src/icons/CaretRight';
-import { CheckCircle } from 'phosphor-react-native/src/icons/CheckCircle';
+import { Check } from 'phosphor-react-native/src/icons/Check';
 import { SpinnerGap } from 'phosphor-react-native/src/icons/SpinnerGap';
 import { WarningCircle } from 'phosphor-react-native/src/icons/WarningCircle';
 
-import { ListItemCard } from '@/components/ui/list-item-card';
-import { IconWrapper } from '@/components/ui/icon-wrapper';
+import { ClinicalText } from '@/components/ui/clinical-text';
 import { StatusBadge, StatusBadgeType } from '@/components/ui/status-badge';
 
 export type ScanStatus = 'completed' | 'processing' | 'error';
@@ -27,87 +27,117 @@ export interface ScanListItemProps {
   style?: any;
 }
 
+const isWeb = Platform.OS === 'web';
+const GLASS_CARD_STYLE = {
+  backgroundColor: 'rgba(255, 255, 255, 0.45)',
+  borderColor: 'rgba(255, 255, 255, 0.9)',
+  borderWidth: 1.5,
+  borderRadius: 20,
+  overflow: 'hidden' as const,
+};
+
 const STATUS_ICON_CONFIG: Record<
   ScanStatus,
   {
     icon: any;
-    color: 'success' | 'brand' | 'error';
-    weight: 'fill' | 'regular' | 'bold';
+    colorHex: string;
+    borderClass: string;
     a11yLabel: string;
   }
 > = {
   completed: {
-    icon: CheckCircle,
-    color: 'success',
-    weight: 'fill',
+    icon: Check,
+    colorHex: '#10B981',
+    borderClass: 'border-emerald-500',
     a11yLabel: 'Status: Completed',
   },
   processing: {
     icon: SpinnerGap,
-    color: 'brand',
-    weight: 'bold',
+    colorHex: '#F59E0B',
+    borderClass: 'border-amber-500',
     a11yLabel: 'Status: Processing',
   },
   error: {
     icon: WarningCircle,
-    color: 'error',
-    weight: 'fill',
+    colorHex: '#EF4444',
+    borderClass: 'border-rose-500',
     a11yLabel: 'Status: Error',
   },
-};
-
-const STATUS_BG_CONFIG: Record<ScanStatus, string> = {
-  completed: 'bg-emerald-50 border border-emerald-100',
-  processing: 'bg-sky-50 border border-sky-100',
-  error: 'bg-rose-50 border border-rose-100',
 };
 
 /**
  * ScanListItem
  * Individual horizontal card for recent scans.
- * Extends the generic ListItemCard with specific clinical status icon,
- * StatusBadge pill, and navigation chevron via NativeWind.
+ * Enforces robust flexbox structure preventing badge and chevron squishing:
+ * - Left Group: flex: 1 with paddingRight: 12 so text truncates cleanly.
+ * - Right Group: Badge with marginRight: 12 + Chevron.
  */
 export function ScanListItem({ scan, onPress, className = '', style }: ScanListItemProps) {
   const iconConfig = STATUS_ICON_CONFIG[scan.status];
-  const bgClass = STATUS_BG_CONFIG[scan.status];
+  const IconComponent = iconConfig.icon;
 
   return (
-    <ListItemCard
-      interactive
+    <Pressable
+      onPress={() => onPress(scan)}
       accessibilityRole="button"
       accessibilityLabel={`Patient: ${scan.patientName}, ${scan.identifier}. Status: ${scan.badgeStatus}.`}
       accessibilityHint="Navigates to 3D Viewer and splint parameters screen"
-      onPress={() => onPress(scan)}
-      className={className}
+      className={`active:opacity-80 ${className}`}
       style={style}
-      leadingIcon={
-        <View className={`w-11 h-11 rounded-full items-center justify-center ${bgClass}`}>
-          <IconWrapper
-            icon={iconConfig.icon}
-            size="action"
-            color={iconConfig.color}
-            weight={iconConfig.weight}
-            accessibilityLabel={iconConfig.a11yLabel}
-          />
-        </View>
-      }
-      title={scan.patientName}
-      subtitle={scan.identifier}
-      trailing={
-        <>
-          <StatusBadge status={scan.badgeStatus} />
-          <View className="w-4 items-center justify-center">
-            <IconWrapper
-              icon={CaretRight}
-              size="status"
-              color="muted"
+    >
+      <BlurView
+        intensity={50}
+        tint="light"
+        style={[
+          GLASS_CARD_STYLE,
+          {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: 16,
+          },
+          isWeb && ({
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+          } as any),
+        ]}
+      >
+        {/* Left Group (Icon + Text) */}
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingRight: 12 }}>
+          <View
+            className={`w-11 h-11 rounded-full bg-transparent border items-center justify-center mr-3.5 ${iconConfig.borderClass}`}
+          >
+            <IconComponent
+              size={20}
+              color={iconConfig.colorHex}
               weight="bold"
-              accessibilityLabel="Open 3D model"
             />
           </View>
-        </>
-      }
-    />
+
+          <View style={{ flex: 1, justifyContent: 'center' }}>
+            <ClinicalText variant="h3" color="primary" numberOfLines={1}>
+              {scan.patientName}
+            </ClinicalText>
+            <ClinicalText
+              variant="caption"
+              color="secondary"
+              numberOfLines={1}
+              className="mt-0.5"
+            >
+              {scan.identifier}
+            </ClinicalText>
+          </View>
+        </View>
+
+        {/* Right Group (Badge + Chevron) */}
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ marginRight: 12 }}>
+            <StatusBadge status={scan.badgeStatus} />
+          </View>
+          <CaretRight size={16} color="#94A3B8" weight="bold" />
+        </View>
+      </BlurView>
+    </Pressable>
   );
 }
+export default ScanListItem;

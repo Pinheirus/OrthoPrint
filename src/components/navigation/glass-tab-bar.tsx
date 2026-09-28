@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 import { House } from 'phosphor-react-native/src/icons/House';
@@ -23,81 +23,74 @@ const TABS: (TabItemData & { key: TabKey })[] = [
 
 /**
  * GlassTabBar
- * Floating "pill" style bottom navigation bar with 3 clean destinations:
- * - Home (/)
- * - New Scan (/new-scan)
- * - Profile (/profile)
- * Distributes items evenly across the frosted glass pill.
+ * High-end Dribbble-inspired floating glass pill bottom navigation bar with elegant drop shadow.
  */
 export function GlassTabBar({ activeTab, onTabPress, className = '' }: GlassTabBarProps) {
   const insets = useSafeAreaInsets();
-  // Sit 16px above the home indicator / bottom edge
-  const bottomPosition = Math.max(insets.bottom, 16) + 16;
+  const bottomPosition = Math.max(insets.bottom, 12) + 12;
   const isWeb = Platform.OS === 'web';
 
   return (
     <View
-      className={`absolute left-5 right-5 z-50 ${className}`}
-      style={{ bottom: bottomPosition }}
+      className={`absolute left-0 right-0 z-50 ${className}`}
+      style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: 'transparent',
+      }}
       pointerEvents="box-none"
     >
+      {/* Container holding the Bottom Navigation BlurView with drop shadow */}
       <View
-        className="relative rounded-full"
-        style={[
-          {
-            shadowColor: '#0C4A6E',
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.14,
-            shadowRadius: 24,
-            elevation: 12,
-          },
-          isWeb && ({
-            backdropFilter: 'blur(40px)',
-            WebkitBackdropFilter: 'blur(40px)',
-          } as any),
-        ]}
+        style={{
+          position: 'absolute',
+          bottom: bottomPosition,
+          left: 20,
+          right: 20,
+          height: 64,
+          borderRadius: 40,
+          shadowColor: '#003366',
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.08,
+          shadowRadius: 24,
+          elevation: 10,
+        }}
       >
-        {/* Base Layer: max-intensity Expo BlurView for strong frosted effect */}
-        {!isWeb && (
-          <BlurView
-            intensity={100}
-            tint="light"
-            className="absolute inset-0 rounded-full overflow-hidden"
-          />
-        )}
-
-        {/* Semi-transparent white glass fill */}
-        <View
-          pointerEvents="none"
-          className="absolute inset-0 rounded-full bg-white/40 overflow-hidden"
-        />
-
-        {/* Crisp outer border */}
-        <View
-          pointerEvents="none"
-          className="absolute inset-0 rounded-full border border-white/60"
-        />
-
-        {/* Top specular highlight — simulates light catching the top edge of a glass surface */}
-        <View
-          pointerEvents="none"
-          className="absolute top-0 left-6 right-6 h-px bg-white/80 rounded-full"
-        />
-
-        {/* Navigation Tab Icons Row - 3 evenly distributed tabs */}
-        <View
-          className="flex-row justify-around items-center px-4 py-2.5 z-10"
-          accessibilityRole="tablist"
+        <BlurView
+          intensity={85}
+          tint="light"
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              borderRadius: 40,
+              overflow: 'hidden',
+              backgroundColor: 'rgba(255, 255, 255, 0.65)',
+              borderWidth: 1.5,
+              borderColor: 'rgba(255, 255, 255, 1)',
+            },
+            isWeb && ({
+              backdropFilter: 'blur(35px)',
+              WebkitBackdropFilter: 'blur(35px)',
+            } as any),
+          ]}
         >
-          {TABS.map((tab) => (
-            <TabBarItem
-              key={tab.key}
-              item={tab}
-              isActive={activeTab === tab.key}
-              onPress={() => onTabPress?.(tab.key)}
-            />
-          ))}
-        </View>
+          {/* Navigation Tab Icons Row - perfectly centered vertically and horizontally */}
+          <View
+            className="flex-row justify-around items-center h-full px-4"
+            accessibilityRole="tablist"
+          >
+            {TABS.map((tab) => (
+              <TabBarItem
+                key={tab.key}
+                item={tab}
+                isActive={activeTab === tab.key}
+                onPress={() => onTabPress?.(tab.key)}
+              />
+            ))}
+          </View>
+        </BlurView>
       </View>
     </View>
   );

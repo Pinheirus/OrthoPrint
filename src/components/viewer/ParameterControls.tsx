@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Pressable, Switch, View } from 'react-native';
+import { Platform, Pressable, Switch, View } from 'react-native';
+import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { Minus } from 'phosphor-react-native/src/icons/Minus';
 import { Plus } from 'phosphor-react-native/src/icons/Plus';
-import { GlassSurface } from '@/components/ui/glass-surface';
 import { ClinicalText } from '@/components/ui/clinical-text';
 
 export type VentilationDensity = 'Low' | 'Standard' | 'High';
@@ -19,10 +19,21 @@ export interface ParameterControlsProps {
   }) => void;
 }
 
+const isWeb = Platform.OS === 'web';
+const GLASS_CARD_STYLE = {
+  backgroundColor: 'rgba(255, 255, 255, 0.45)',
+  borderColor: 'rgba(255, 255, 255, 0.9)',
+  borderWidth: 1.5,
+  borderRadius: 20,
+  padding: 20,
+  marginBottom: 16,
+  overflow: 'hidden' as const,
+};
+
 /**
  * ParameterControls
  * Manages localized state for Thickness, Density, and Struts.
- * Isolates re-renders to prevent bubbling up to the screen or root layout.
+ * Uses Glassmorphism BlurView containers with generous padding and margins.
  */
 export function ParameterControls({
   initialThickness = 2.4,
@@ -57,12 +68,22 @@ export function ParameterControls({
 
   return (
     <View className="mb-4">
-      <ClinicalText variant="h3" color="primary" className="mb-3">
+      <ClinicalText variant="h3" color="primary" className="mb-3 ml-1">
         Splint Parameters
       </ClinicalText>
 
       {/* Parameter 1: Material Thickness */}
-      <GlassSurface density="standard" radius="2xl" className="p-4 mb-3">
+      <BlurView
+        intensity={50}
+        tint="light"
+        style={[
+          GLASS_CARD_STYLE,
+          isWeb && ({
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+          } as any),
+        ]}
+      >
         <View className="flex-row items-center justify-between">
           <View className="flex-1 pr-3">
             <ClinicalText variant="bodyMedium" color="primary" className="font-semibold">
@@ -74,7 +95,7 @@ export function ParameterControls({
           </View>
 
           {/* Stepper */}
-          <View className="flex-row items-center bg-slate-100/90 rounded-2xl p-1 border border-slate-200/80">
+          <View className="flex-row items-center bg-white/80 rounded-2xl p-1 border border-slate-200/80 shadow-sm">
             <Pressable
               onPress={() => adjustThickness(-0.1)}
               className="w-9 h-9 rounded-xl bg-white items-center justify-center shadow-sm active:bg-slate-50"
@@ -98,10 +119,20 @@ export function ParameterControls({
             </Pressable>
           </View>
         </View>
-      </GlassSurface>
+      </BlurView>
 
       {/* Parameter 2: Ventilation Density */}
-      <GlassSurface density="standard" radius="2xl" className="p-4 mb-3">
+      <BlurView
+        intensity={50}
+        tint="light"
+        style={[
+          GLASS_CARD_STYLE,
+          isWeb && ({
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+          } as any),
+        ]}
+      >
         <View className="flex-row items-center justify-between mb-3">
           <View>
             <ClinicalText variant="bodyMedium" color="primary" className="font-semibold">
@@ -160,10 +191,20 @@ export function ParameterControls({
             </ClinicalText>
           </Pressable>
         </View>
-      </GlassSurface>
+      </BlurView>
 
       {/* Parameter 3: Support Struts */}
-      <GlassSurface density="standard" radius="2xl" className="p-4 mb-2">
+      <BlurView
+        intensity={50}
+        tint="light"
+        style={[
+          GLASS_CARD_STYLE,
+          isWeb && ({
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+          } as any),
+        ]}
+      >
         <View className="flex-row items-center justify-between">
           <View className="flex-1 pr-4">
             <ClinicalText variant="bodyMedium" color="primary" className="font-semibold">
@@ -177,11 +218,11 @@ export function ParameterControls({
           <Switch
             value={strutsEnabled}
             onValueChange={handleStrutsToggle}
-            trackColor={{ false: '#CBD5E1', true: '#0EA5E9' }}
+            trackColor={{ false: '#CBD5E1', true: '#007AFF' }}
             thumbColor="#FFFFFF"
           />
         </View>
-      </GlassSurface>
+      </BlurView>
     </View>
   );
 }
