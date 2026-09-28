@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -7,7 +7,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -18,6 +18,7 @@ import { IdentificationCard } from 'phosphor-react-native/src/icons/Identificati
 import { GlassSurface } from '@/components/ui/glass-surface';
 import { ClinicalText } from '@/components/ui/clinical-text';
 import { Colors } from '@/constants/tokens';
+import { useScanStore } from '@/store/useScanStore';
 
 const ANATOMICAL_REGIONS = ['Forearm', 'Wrist', 'Hand', 'Thumb'] as const;
 type AnatomicalRegion = (typeof ANATOMICAL_REGIONS)[number];
@@ -27,11 +28,17 @@ type Laterality = 'Left' | 'Right';
 export default function NewScanScreen() {
   const insets = useSafeAreaInsets();
 
-  // Localized form states
-  const [patientName, setPatientName] = useState('');
-  const [patientId, setPatientId] = useState('');
-  const [selectedRegion, setSelectedRegion] = useState<AnatomicalRegion>('Wrist');
-  const [laterality, setLaterality] = useState<Laterality>('Right');
+  const draftScan = useScanStore((state) => state.draftScan);
+  const setDraftData = useScanStore((state) => state.setDraftData);
+  const resetDraft = useScanStore((state) => state.resetDraft);
+
+  // ── Reset draft form on every focus ──────────────────────────────────────
+  // Guaranteed clean slate whenever the screen comes into focus for a new scan
+  useFocusEffect(
+    useCallback(() => {
+      resetDraft();
+    }, [resetDraft]),
+  );
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -40,22 +47,29 @@ export default function NewScanScreen() {
 
   const handleRegionSelect = (region: AnatomicalRegion) => {
     Haptics.selectionAsync();
-    setSelectedRegion(region);
+    setDraftData({ region });
   };
 
   const handleLateralitySelect = (side: Laterality) => {
     Haptics.selectionAsync();
-    setLaterality(side);
+    setDraftData({ side });
   };
 
   const handleInitializeScanner = () => {
+    // Guard: patient name is required before entering the AR capture flow
+    if (!draftScan.patientName.trim()) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      alert('Please enter the patient name before proceeding.');
+      return;
+    }
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push({
       pathname: '/camera-capture',
       params: {
-        patientName: patientName.trim() || 'Eleanor Vance',
-        region: selectedRegion,
-        side: laterality,
+        patientName: draftScan.patientName.trim(),
+        region: draftScan.region,
+        side: draftScan.side,
       },
     });
   };
@@ -128,8 +142,8 @@ export default function NewScanScreen() {
               <View className="flex-row items-center bg-white/90 border border-slate-200/90 rounded-2xl px-3.5 h-12 shadow-sm">
                 <User size={18} color="#64748B" weight="regular" />
                 <TextInput
-                  value={patientName}
-                  onChangeText={setPatientName}
+                  value={draftScan.patientName}
+                  onChangeText={(text) => setDraftData({ patientName: text })}
                   placeholder="e.g., Eleanor Vance"
                   placeholderTextColor="#94A3B8"
                   className="flex-1 ml-2.5 text-[15px] text-slate-900 font-sans"
@@ -146,8 +160,8 @@ export default function NewScanScreen() {
               <View className="flex-row items-center bg-white/90 border border-slate-200/90 rounded-2xl px-3.5 h-12 shadow-sm">
                 <IdentificationCard size={18} color="#64748B" weight="regular" />
                 <TextInput
-                  value={patientId}
-                  onChangeText={setPatientId}
+                  value={draftScan.medicalRecord}
+                  onChangeText={(text) => setDraftData({ medicalRecord: text })}
                   placeholder="e.g., MRN-8849-B"
                   placeholderTextColor="#94A3B8"
                   className="flex-1 ml-2.5 text-[15px] text-slate-900 font-sans"
@@ -168,7 +182,7 @@ export default function NewScanScreen() {
 
             <View className="flex-row flex-wrap gap-2">
               {ANATOMICAL_REGIONS.map((region) => {
-                const isSelected = selectedRegion === region;
+                const isSelected = draftScan.region === region;
                 return (
                   <Pressable
                     key={region}
@@ -203,7 +217,7 @@ export default function NewScanScreen() {
 
             <View className="flex-row bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/80 gap-1.5">
               {(['Left', 'Right'] as Laterality[]).map((side) => {
-                const isSelected = laterality === side;
+                const isSelected = draftScan.side === side;
                 return (
                   <Pressable
                     key={side}

@@ -16,9 +16,26 @@ export interface ScanRecord {
   strutsEnabled?: boolean;
 }
 
+export interface DraftScan {
+  patientName: string;
+  medicalRecord: string;
+  region: string;
+  side: string;
+}
+
+export const INITIAL_DRAFT_SCAN: DraftScan = {
+  patientName: '',
+  medicalRecord: '',
+  region: 'Wrist',
+  side: 'Right',
+};
+
 interface ScanStoreState {
   scans: ScanRecord[];
+  draftScan: DraftScan;
   addScan: (scan: Omit<ScanRecord, 'id' | 'date'> & { id?: string; date?: string }) => void;
+  setDraftData: (data: Partial<DraftScan>) => void;
+  resetDraft: () => void;
 }
 
 const INITIAL_SCANS: ScanRecord[] = [
@@ -62,6 +79,7 @@ const INITIAL_SCANS: ScanRecord[] = [
 
 export const useScanStore = create<ScanStoreState>((set) => ({
   scans: INITIAL_SCANS,
+  draftScan: INITIAL_DRAFT_SCAN,
   addScan: (newScan) =>
     set((state) => {
       const createdScan: ScanRecord = {
@@ -79,5 +97,13 @@ export const useScanStore = create<ScanStoreState>((set) => ({
       return {
         scans: [createdScan, ...state.scans],
       };
+    }),
+  setDraftData: (data) =>
+    set((state) => ({
+      draftScan: { ...state.draftScan, ...data },
+    })),
+  resetDraft: () =>
+    set({
+      draftScan: { ...INITIAL_DRAFT_SCAN },
     }),
 }));
