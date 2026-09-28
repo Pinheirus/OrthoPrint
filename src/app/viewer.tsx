@@ -13,6 +13,7 @@ import { useNotificationStore } from '@/store/useNotificationStore';
 export default function ViewerScreen() {
   const insets = useSafeAreaInsets();
   const addScan = useScanStore((state) => state.addScan);
+  const updateScan = useScanStore((state) => state.updateScan);
   const showNotification = useNotificationStore((state) => state.showNotification);
 
   const params = useLocalSearchParams<{
@@ -54,17 +55,30 @@ export default function ViewerScreen() {
   const handlePrint = async () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-    // Save to global Zustand store (Smart Mock database)
-    addScan({
-      patientName: patientDisplayName,
-      region: params.region || 'Radius/Ulna',
-      side: params.side || 'Right',
-      status: 'completed',
-      badgeStatus: 'printed',
-      thickness: currentParamsRef.current.thickness,
-      density: currentParamsRef.current.density,
-      strutsEnabled: currentParamsRef.current.strutsEnabled,
-    });
+    // Save or update in global Zustand store
+    if (params.id) {
+      updateScan(params.id, {
+        patientName: patientDisplayName,
+        region: params.region || 'Radius/Ulna',
+        side: params.side || 'Right',
+        status: 'completed',
+        badgeStatus: 'printed',
+        thickness: currentParamsRef.current.thickness,
+        density: currentParamsRef.current.density,
+        strutsEnabled: currentParamsRef.current.strutsEnabled,
+      });
+    } else {
+      addScan({
+        patientName: patientDisplayName,
+        region: params.region || 'Radius/Ulna',
+        side: params.side || 'Right',
+        status: 'completed',
+        badgeStatus: 'printed',
+        thickness: currentParamsRef.current.thickness,
+        density: currentParamsRef.current.density,
+        strutsEnabled: currentParamsRef.current.strutsEnabled,
+      });
+    }
 
     Alert.alert(
       'Print Job Sent',

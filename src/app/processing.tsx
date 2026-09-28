@@ -20,12 +20,13 @@ const STEP_INTERVAL_MS = 1500;
 export default function ProcessingScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
+    id?:          string;
     patientName?: string;
     region?:      string;
     side?:        string;
     dimensions?:  string; // JSON-stringified clinicalData from ARScanner
   }>();
-  const { patientName, region, side, dimensions } = params;
+  const { id, patientName, region, side, dimensions } = params;
   const [statusIndex, setStatusIndex] = useState(0);
 
   useEffect(() => {
@@ -43,7 +44,7 @@ export default function ProcessingScreen() {
       }
       router.replace({
         pathname: '/viewer',
-        params: { patientName, region, side, dimensions },
+        params: { id, patientName, region, side, dimensions },
       });
     }, TOTAL_DURATION_MS);
 
@@ -51,7 +52,7 @@ export default function ProcessingScreen() {
       clearInterval(intervalId);
       clearTimeout(timeoutId);
     };
-  }, [router, patientName, region, side, dimensions]);
+  }, [router, id, patientName, region, side, dimensions]);
 
   return (
     <View className="flex-1 items-center justify-center px-6">

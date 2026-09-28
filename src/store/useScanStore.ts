@@ -34,6 +34,7 @@ interface ScanStoreState {
   scans: ScanRecord[];
   draftScan: DraftScan;
   addScan: (scan: Omit<ScanRecord, 'id' | 'date'> & { id?: string; date?: string }) => void;
+  updateScan: (id: string, updates: Partial<ScanRecord>) => void;
   setDraftData: (data: Partial<DraftScan>) => void;
   resetDraft: () => void;
 }
@@ -98,6 +99,12 @@ export const useScanStore = create<ScanStoreState>((set) => ({
         scans: [createdScan, ...state.scans],
       };
     }),
+  updateScan: (id, updates) =>
+    set((state) => ({
+      scans: state.scans.map((scan) =>
+        scan.id === id ? { ...scan, ...updates } : scan
+      ),
+    })),
   setDraftData: (data) =>
     set((state) => ({
       draftScan: { ...state.draftScan, ...data },

@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -18,7 +19,7 @@ import { IdentificationCard } from 'phosphor-react-native/src/icons/Identificati
 import { GlassSurface } from '@/components/ui/glass-surface';
 import { ClinicalText } from '@/components/ui/clinical-text';
 import { Colors } from '@/constants/tokens';
-import { useScanStore } from '@/store/useScanStore';
+import { useScanStore, ScanStatus, StatusBadgeType } from '@/store/useScanStore';
 
 const ANATOMICAL_REGIONS = ['Forearm', 'Wrist', 'Hand', 'Thumb'] as const;
 type AnatomicalRegion = (typeof ANATOMICAL_REGIONS)[number];
@@ -31,6 +32,7 @@ export default function NewScanScreen() {
   const draftScan = useScanStore((state) => state.draftScan);
   const setDraftData = useScanStore((state) => state.setDraftData);
   const resetDraft = useScanStore((state) => state.resetDraft);
+  const addScan = useScanStore((state) => state.addScan);
 
   // ── Reset draft form on every focus ──────────────────────────────────────
   // Guaranteed clean slate whenever the screen comes into focus for a new scan
@@ -56,20 +58,41 @@ export default function NewScanScreen() {
   };
 
   const handleInitializeScanner = () => {
-    // Guard: patient name is required before entering the AR capture flow
-    if (!draftScan.patientName.trim()) {
+    const patientName = draftScan.patientName.trim();
+    if (!patientName) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      alert('Please enter the patient name before proceeding.');
+      Alert.alert('Required Field', 'Please enter the patient name before proceeding.');
       return;
     }
+
+    const newScanId = `scan-${Date.now()}`;
+    const newPatientData = {
+      id: newScanId,
+      patientName,
+      region: draftScan.region,
+      side: draftScan.side,
+      status: 'processing' as ScanStatus,
+      badgeStatus: 'processing' as StatusBadgeType,
+      thickness: 2.4,
+      density: 'Standard',
+      strutsEnabled: true,
+      date: 'Just now',
+    };
+
+    // 1. Add to global Zustand store (so it appears immediately on Dashboard)
+    addScan(newPatientData);
+
+    // 2. Clear draft state
+    resetDraft();
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push({
       pathname: '/camera-capture',
       params: {
-        patientName: draftScan.patientName.trim(),
-        region: draftScan.region,
-        side: draftScan.side,
+        id: newScanId,
+        patientName: newPatientData.patientName,
+        region: newPatientData.region,
+        side: newPatientData.side,
       },
     });
   };

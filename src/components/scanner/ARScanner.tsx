@@ -316,7 +316,19 @@ function ScannerUI({
 // ═══════════════════════════════════════════════════════════════════════════════
 // 3. ARScanner — state container (default export)
 // ═══════════════════════════════════════════════════════════════════════════════
-export default function ARScanner() {
+export interface ARScannerProps {
+  scanId?: string;
+  patientName?: string;
+  region?: string;
+  side?: string;
+}
+
+export default function ARScanner({
+  scanId,
+  patientName,
+  region,
+  side,
+}: ARScannerProps = {}) {
   const router = useRouter();
 
   const [trackingState, setTrackingState] = useState(0);
@@ -455,9 +467,15 @@ export default function ARScanner() {
   const handleNextStep = useCallback(() => {
     router.push({
       pathname: '/processing',
-      params: { dimensions: JSON.stringify(clinicalData) },
+      params: {
+        id: scanId,
+        patientName,
+        region,
+        side,
+        dimensions: JSON.stringify(clinicalData),
+      },
     });
-  }, [clinicalData, router]);
+  }, [clinicalData, router, scanId, patientName, region, side]);
 
   return (
     <View style={{ flex: 1, backgroundColor: '#000' }}>
