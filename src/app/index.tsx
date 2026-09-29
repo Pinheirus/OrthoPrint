@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   ScrollView,
@@ -9,6 +9,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useDoctorStore } from '@/store/useDoctorStore';
 
 // Design System UI Primitives
 import { ClinicalText } from '@/components/ui';
@@ -25,11 +26,12 @@ import {
 } from '@/components/dashboard';
 import { useScanStore } from '@/store/useScanStore';
 
-function getClinicalGreeting(): string {
+function getClinicalGreeting(doctorDisplay: string): string {
+  const name = doctorDisplay || 'Doctor';
   const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return 'Good morning, Dr. Lucas';
-  if (hour >= 12 && hour < 18) return 'Good afternoon, Dr. Lucas';
-  return 'Good evening, Dr. Lucas';
+  if (hour >= 5 && hour < 12) return `Good morning, ${name}`;
+  if (hour >= 12 && hour < 18) return `Good afternoon, ${name}`;
+  return `Good evening, ${name}`;
 }
 
 /**
@@ -41,8 +43,23 @@ export default function DashboardScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const scans = useScanStore((state) => state.scans);
+  const { hasCompletedOnboarding, fullTitle, title } = useDoctorStore();
 
-  const greeting = useMemo(() => getClinicalGreeting(), []);
+  // Redirect to onboarding on first launch (no flash: router.replace is
+  // called before the first paint via useEffect with no deps change guard).
+  useEffect(() => {
+    if (!hasCompletedOnboarding) {
+      router.replace('/onboarding');
+    }
+  }, [hasCompletedOnboarding, router]);
+
+  // Build the display name: prefer fullTitle from store, fall back gracefully.
+  const doctorDisplay = fullTitle || (title ? title : 'Dr. Lucas');
+
+  const greeting = useMemo(
+    () => getClinicalGreeting(doctorDisplay),
+    [doctorDisplay],
+  );
 
   const metrics = useMemo(() => {
     const totalToday = scans.length;
@@ -98,7 +115,7 @@ export default function DashboardScreen() {
       {/* 1. Top App Bar — safe area inset handled internally by TopAppBar */}
       <TopAppBar
         greeting={greeting}
-        doctorName="Dr. Lucas"
+        doctorName={doctorDisplay}
         onAvatarPress={handleSettingsPress}
         onSettingsPress={handleSettingsPress}
         onNotificationsPress={() => router.push('/notifications')}

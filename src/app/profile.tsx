@@ -24,10 +24,13 @@ import { User } from 'phosphor-react-native/src/icons/User';
 import { GearSix } from 'phosphor-react-native/src/icons/GearSix';
 import { ClinicalText } from '@/components/ui/clinical-text';
 import { GlassTabBar } from '@/components/navigation/glass-tab-bar';
+import { useDoctorStore } from '@/store/useDoctorStore';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
+  const { title, lastName } = useDoctorStore();
+  const doctorName = lastName ? `${title} ${lastName}` : 'Doctor';
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -173,7 +176,7 @@ export default function ProfileScreen() {
           </View>
 
           <ClinicalText variant="h2" color="primary" align="center">
-            Dr. Lucas Pinheiro
+            {doctorName}
           </ClinicalText>
           <ClinicalText variant="caption" color="secondary" align="center" className="mt-0.5">
             Universidad Sudamericana

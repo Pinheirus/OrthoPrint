@@ -29,7 +29,7 @@ export default function ViewerScreen() {
 
   const isReadOnly = params.isReadOnly === 'true';
   const initialThickness = params.thickness ? parseFloat(params.thickness) : 2.4;
-  const initialDensity = (params.density as VentilationDensity) || 'Standard';
+  const initialDensity = (params.density as VentilationDensity) || 'Estándar';
 
   // Keep live adjusted parameters for addScan when approving
   const currentParamsRef = useRef<{
@@ -196,7 +196,7 @@ export default function ViewerScreen() {
           >
             <Printer size={22} color="#FFFFFF" weight="bold" />
             <ClinicalText variant="bodyMedium" color="white" className="font-bold tracking-wide text-[16px]">
-              Approve & Send to Printer
+              Aprobar y Enviar a Impresora
             </ClinicalText>
           </Pressable>
         </View>
