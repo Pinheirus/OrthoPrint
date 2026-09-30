@@ -39,7 +39,7 @@ export default function NewScanScreen() {
   const handleBack = () => {
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch (e) {}
+    } catch (e) { }
     router.replace('/');
   };
 
@@ -48,7 +48,7 @@ export default function NewScanScreen() {
     if (!trimmedName) {
       try {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      } catch (e) {}
+      } catch (e) { }
       Alert.alert('Required Field', 'Please enter the patient name before proceeding.');
       return;
     }
@@ -71,7 +71,7 @@ export default function NewScanScreen() {
 
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    } catch (e) {}
+    } catch (e) { }
 
     router.push({
       pathname: '/camera-capture',

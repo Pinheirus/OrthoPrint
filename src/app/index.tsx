@@ -29,9 +29,9 @@ import { useScanStore } from '@/store/useScanStore';
 function getClinicalGreeting(doctorDisplay: string): string {
   const name = doctorDisplay || 'Doctor';
   const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return `Good morning, ${name}`;
-  if (hour >= 12 && hour < 18) return `Good afternoon, ${name}`;
-  return `Good evening, ${name}`;
+  if (hour >= 5 && hour < 12) return `Buenos días, ${name}`;
+  if (hour >= 12 && hour < 18) return `Buenas tardes, ${name}`;
+  return `Buenas noches, ${name}`;
 }
 
 /**
@@ -134,7 +134,7 @@ export default function DashboardScreen() {
         }}
         showsVerticalScrollIndicator={false}
         accessibilityRole="list"
-        accessibilityLabel="Recent clinical scans and capture trigger"
+        accessibilityLabel="Escaneos recientes y botón de captura"
       >
         {/* Start New Scan Card */}
         <StartNewScanCard onPress={handleStartNewScan} />
@@ -146,7 +146,7 @@ export default function DashboardScreen() {
             color="primary"
             className="text-[15px] font-semibold text-slate-800"
           >
-            Recent Clinical Scans
+            Escaneos Recientes
           </ClinicalText>
           {scans.length > 0 && (
             <Pressable
@@ -155,7 +155,7 @@ export default function DashboardScreen() {
               className="active:opacity-70"
             >
               <ClinicalText variant="caption" color="brand" className="font-semibold">
-                See All ({scans.length})
+                Ver todos ({scans.length})
               </ClinicalText>
             </Pressable>
           )}

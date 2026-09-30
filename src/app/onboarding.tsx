@@ -349,7 +349,7 @@ export default function OnboardingScreen() {
                 onPressIn={onCtaPressIn}
                 onPressOut={onCtaPressOut}
                 accessibilityRole="button"
-                accessibilityLabel={step === 0 ? 'Continue to doctor setup' : 'Get started with the dashboard'}
+                accessibilityLabel={step === 0 ? 'Continuar a configuración de médico' : 'Comenzar con el panel'}
                 style={[styles.ctaButton, { backgroundColor: '#007AFF' }]}
               >
                 <View style={styles.ctaGradient}>
@@ -500,7 +500,7 @@ function SetupCard({
           returnKeyType="done"
           onFocus={onInputFocus}
           onBlur={onInputBlur}
-          accessibilityLabel="Doctor last name"
+          accessibilityLabel="Apellido del médico"
         />
       </BlurView>
 

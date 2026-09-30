@@ -99,7 +99,7 @@ export function ParameterControls({
               onPress={() => {
                 try {
                   Haptics.selectionAsync();
-                } catch (e) {}
+                } catch (e) { }
                 setThickness((prev) => Math.max(1.0, prev - 0.2));
               }}
               className="w-9 h-9 rounded-xl bg-white items-center justify-center shadow-sm active:bg-slate-50"
@@ -118,7 +118,7 @@ export function ParameterControls({
               onPress={() => {
                 try {
                   Haptics.selectionAsync();
-                } catch (e) {}
+                } catch (e) { }
                 setThickness((prev) => Math.min(5.0, prev + 0.2));
               }}
               className="w-9 h-9 rounded-xl bg-white items-center justify-center shadow-sm active:bg-slate-50"
@@ -164,7 +164,7 @@ export function ParameterControls({
                 onPress={() => {
                   try {
                     Haptics.selectionAsync();
-                  } catch (e) {}
+                  } catch (e) { }
                   setDensity(item);
                 }}
                 activeOpacity={0.8}
@@ -206,7 +206,7 @@ export function ParameterControls({
             onValueChange={(val) => {
               try {
                 Haptics.selectionAsync();
-              } catch (e) {}
+              } catch (e) { }
               setStrutsEnabled(val);
             }}
             trackColor={{ false: '#CBD5E1', true: '#007AFF' }}
